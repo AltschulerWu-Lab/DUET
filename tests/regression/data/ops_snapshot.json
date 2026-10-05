@@ -1,0 +1,40 @@
+{
+  "config_hash": "68c9df6ec46c678a6f3b387edfac3a62c01867d83d1667cb9059f42339ceadf3",
+  "config_hash_method": "sha256 of ops_config_post.yaml",
+  "note": "regenerated 2026-09-11 after the lambda-convention flip (lambda weights decoding accuracy; lambda=1 is decode-only)",
+  "seed": 42,
+  "per_lambda": {
+    "0.0": {
+      "best_indices": [
+        0,
+        9,
+        13,
+        18,
+        22,
+        29,
+        31,
+        38,
+        42,
+        48
+      ],
+      "decode_accuracy": 0.8965,
+      "score": 1.0
+    },
+    "1.0": {
+      "best_indices": [
+        4,
+        7,
+        13,
+        15,
+        24,
+        29,
+        33,
+        36,
+        43,
+        45
+      ],
+      "decode_accuracy": 0.9469,
+      "score": 1.0
+    }
+  }
+}

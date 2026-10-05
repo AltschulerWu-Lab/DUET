@@ -1,0 +1,49 @@
+# Smoke config (VARIANT=smoke), derived from eval_position_varying_asymmetric.yaml:
+# reads the four phase-1 smoke outputs; evaluator num_samples 200.
+# Outputs, caches and scratch under results/smoke/. Same device and code path.
+outdir: ../../results/smoke/ops_crispri_cross_eval/cross_eval/eval_position_varying_asymmetric
+cache_dir: ../../results/smoke/cache/ops_crispri_cross_eval
+seed: 42
+device: gpu:all
+eval_mem_budget_gb: 64.0
+reference_dir: ../../results/smoke/ops_crispri_cross_eval/position_varying_asymmetric
+evaluator:
+  noise_channel:
+    type: position_varying_asymmetric
+    channel_matrices_path: noise_matrices/nisseq_positional_channel_10rounds.npy
+  decoding_metric:
+    type: position_varying_asymmetric_nll
+    channel_matrices_path: noise_matrices/nisseq_positional_channel_10rounds.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 200
+  num_cpus: 30
+  seed: 42
+  scratch_dir: ../../results/smoke/scratch/ops_crispri_cross_eval
+methods:
+- path: ../../results/smoke/ops_crispri_cross_eval/position_varying_asymmetric/results.csv
+  regex: DUET.*
+  label: DUET (Position-varying asymmetric error)
+  color: '#08306b'
+- path: ../../results/smoke/ops_crispri_cross_eval/asymmetric/results.csv
+  regex: DUET.*
+  label: DUET (Asymmetric error)
+  color: '#2171b5'
+- path: ../../results/smoke/ops_crispri_cross_eval/position_varying/results.csv
+  regex: DUET.*
+  label: DUET (Position-varying error)
+  color: '#6baed6'
+- path: ../../results/smoke/ops_crispri_cross_eval/symmetric/results.csv
+  regex: DUET.*
+  label: DUET (Symmetric error)
+  color: '#9ecae1'
+- path: ../../results/smoke/ops_crispri_cross_eval/position_varying_asymmetric/results.csv
+  regex:
+  - Feldman et al.*
+  - Maximum activity
+  label: Feldman et al.
+- path: ../../results/smoke/ops_crispri_cross_eval/position_varying_asymmetric/results.csv
+  regex:
+  - Sivanandan et al.*
+  - Maximum activity
+  label: Sivanandan et al.

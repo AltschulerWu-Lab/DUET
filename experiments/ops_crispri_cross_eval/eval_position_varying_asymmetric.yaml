@@ -1,0 +1,91 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/08-05-2026/Weissman_cross_eval/cross_eval/eval_position_varying_asymmetric.yaml
+# for experiments/ops_crispri_cross_eval (Supp Fig S3b). Changes, nothing else:
+#   * outdir, reference_dir, methods[].path, cache_dir and evaluator.scratch_dir
+#     moved under this repo's results/ (reference_dir and methods point at
+#     this experiment's four phase-1 outdirs).
+#   * noise-matrix paths point at the byte-identical copies in noise_matrices/.
+#   * seed: 42 added under evaluator: (unset as run), so the phase-2 re-scoring
+#     repeats run to run for identical phase-1 outputs. ComparisonConfig passes
+#     evaluator.seed to the evaluator; the top-level seed never reaches it.
+#   No lambda here: regex "DUET.*" takes every lambda of each run.
+#   Flat ComparisonConfig schema kept as described below. cache_dir and the
+#   top-level seed are required-or-accepted by the loader but not used by
+#   compare_benchmarks.py.
+# All relative paths are relative to this folder: the loaders take them
+# verbatim (relative to the working directory) and run.sh cd's here first.
+# The archived header follows unchanged; the files it refers to (README.md,
+# sibling configs) are those of the archive bundle scripts/benchmark/archive/08-05-2026/Weissman_cross_eval/
+# =============================================================================
+
+# =============================================================================
+# Cross-evaluation: score all four DUET optimizations + baselines under the
+# POSITION-VARYING ASYMMETRIC (NIS-seq learned, first 10 rounds) noise channel
+# as ground truth. Most general / expressive model — treated as ground truth in
+# this evaluation.
+#
+# DUET variants are rendered with a blue gradient (see `color:` entries in the
+# methods list) — intensity rises with model expressiveness so the matching
+# ground-truth model is darkest. The other three cross_eval configs carry no
+# explicit colors and fall back to visualize_comparison.py's DUET_COLORS cycle.
+#
+# NOTE: compare_benchmarks.py / ComparisonConfig were not migrated to the
+# 2026-06-21 unified device/mem schema. This file therefore uses the flat form:
+# top-level `device` and `eval_mem_budget_gb`, and `scratch_dir` nested inside
+# the `evaluator` block. Do NOT copy the run_benchmark.py schema here.
+# =============================================================================
+
+outdir: ../../results/experiments/ops_crispri_cross_eval/cross_eval/eval_position_varying_asymmetric
+cache_dir: ../../results/cache/ops_crispri_cross_eval
+seed: 42
+device: "gpu:all"
+eval_mem_budget_gb: 64.0
+
+reference_dir: ../../results/experiments/ops_crispri_cross_eval/position_varying_asymmetric
+
+evaluator:
+  noise_channel:
+    type: position_varying_asymmetric
+    channel_matrices_path: noise_matrices/nisseq_positional_channel_10rounds.npy
+  decoding_metric:
+    type: position_varying_asymmetric_nll
+    channel_matrices_path: noise_matrices/nisseq_positional_channel_10rounds.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 2000
+  num_cpus: 30
+  seed: 42
+  scratch_dir: ../../results/scratch/ops_crispri_cross_eval
+
+methods:
+  - path: ../../results/experiments/ops_crispri_cross_eval/position_varying_asymmetric/results.csv
+    regex: "DUET.*"
+    label: "DUET (Position-varying asymmetric error)"
+    color: "#08306b"
+
+  - path: ../../results/experiments/ops_crispri_cross_eval/asymmetric/results.csv
+    regex: "DUET.*"
+    label: "DUET (Asymmetric error)"
+    color: "#2171b5"
+
+  - path: ../../results/experiments/ops_crispri_cross_eval/position_varying/results.csv
+    regex: "DUET.*"
+    label: "DUET (Position-varying error)"
+    color: "#6baed6"
+
+  - path: ../../results/experiments/ops_crispri_cross_eval/symmetric/results.csv
+    regex: "DUET.*"
+    label: "DUET (Symmetric error)"
+    color: "#9ecae1"
+
+  - path: ../../results/experiments/ops_crispri_cross_eval/position_varying_asymmetric/results.csv
+    regex:
+      - "Feldman et al.*"
+      - "Maximum activity"
+    label: "Feldman et al."
+
+  - path: ../../results/experiments/ops_crispri_cross_eval/position_varying_asymmetric/results.csv
+    regex:
+      - "Sivanandan et al.*"
+      - "Maximum activity"
+    label: "Sivanandan et al."

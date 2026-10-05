@@ -1,0 +1,20 @@
+# =============================================================================
+# Fig 1b: the pairwise-error-probability (PEP) grid glyph.
+#
+# ILLUSTRATIVE VALUES, NOT RESULTS: the glyph colours each (transmitted, decoded)
+# pair of 3-bit codewords by their Hamming distance, using three hand-picked
+# colours. No noise channel, decoder, candidate pool, data file, seed or
+# randomness is involved.
+#
+# generate_pep_grid.py here is a copy of the script that drew the paper's glyph
+# (as run 2026-07-08; that script had no config), changed only to import
+# duet.plotting and to write to outdir instead of next to itself. See README.md.
+#
+# Read by run.sh. outdir is relative to this folder (run.sh cd's into it first).
+# =============================================================================
+
+outdir: ../../results/experiments/pep_grid_glyph
+# true also writes the five corner-radius comparisons
+# pairwise_error_final_rx{6,4,3,2,0}.svg, which the source always wrote. The
+# panel is pairwise_error_final.svg (radius 4, the same as rx4).
+rx_variants: false

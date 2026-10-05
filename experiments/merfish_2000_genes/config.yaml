@@ -1,0 +1,133 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/06-28-2026/2000_genes/2000_genes.yaml
+# for experiments/merfish_2000_genes. Changes, nothing else:
+#   * duet.lambda rewritten as 1 - x (lambda now weights decoding accuracy;
+#     docs/adr/0001-lambda-weights-decoding-accuracy.md).
+#   * outdir, cache_dir and both scratch_dir keys moved under this repo's results/.
+#   * channel_matrix_path (4x) and expression.path rewritten as repo paths.
+#     expression.path is the de-duplicated WMB-10X table (sha256 a8314155...),
+#     not the stale table the as-run bundle used. It holds Allen Brain Cell
+#     Atlas values, which are not shipped: build it with
+#     scripts/wmb10x/build_whole_brain_cpm.py.
+#   * genes / initialization / baselines keep their `panels/...` paths, which now
+#     name the panels rebuilt by make_panels.sh against that table.
+#   * duet.pep.seed 42 -> 43; evaluator.seed stays 42. Both spawn one child
+#     stream per index from their root seed, so with one seed PEP batch j and
+#     ground-truth union row j start from the same stream. Distinct seeds keep
+#     the PEP's Monte Carlo independent of the ground truth's, as in the OPS
+#     experiments. The PEP counts are a new draw; the evaluator's are as run.
+#   * the `visualization` block at the end is new. Only the visualizer reads it.
+# Paths: MerfishBenchmarkConfig resolves outdir, cache_dir, expression.path,
+# genes.path, initialization.path and baselines[].path against this file's
+# folder; channel_matrix_path and scratch_dir are taken verbatim (relative to
+# the working directory). run.sh cd's into this folder first, so all of them
+# resolve relative to this file. run.sh also creates scratch_dir.
+# crowding.n_trials is 1000 as in the archived YAML; the shipped results were
+# re-evaluated at 1000 trials after the run (recompute_crowding.py, 06-29).
+# The archived header follows unchanged; the files it refers to (README.md,
+# sibling configs) are those of the archive bundle scripts/benchmark/archive/06-28-2026/2000_genes/
+# =============================================================================
+# =============================================================================
+# Figure 4 MERFISH — 2000 random brain genes (follows gene_count_scaling/k2000).
+# DUET warm-starts from the Bostrom HW5 32-bit panel; baselines: Bostrom HW5
+# (expression-aware) and MERFISH MHD4 HW5 (shuffled, expression-agnostic).
+# unique_minimum decoding; Zhang-2023 channel; GPU.
+# =============================================================================
+seed: 42
+outdir: ../../results/experiments/merfish_2000_genes
+cache_dir: ../../results/cache/merfish_2000_genes
+
+candidates:
+  seq_rounds: 32
+  codebook_size: 2000
+  hamming_weights: [4, 5]
+  hamming_weight_limits:
+    5: 64040
+  per_codeword_sample_size: 1000
+  sample_seed: 42
+
+evaluator:
+  device: "gpu:all"
+  mem_budget_gb: 20.0
+  noise_channel:
+    type: asymmetric
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+  decoding_metric:
+    type: asymmetric_nll
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 5000
+  num_cpus: 30
+  seed: 42
+  scratch_dir: ../../results/scratch/merfish_2000_genes
+
+expression:
+  path: ../../examples/data/processed/WMB-10X/whole_brain_per_gene_cpm.csv
+  gene_col: gene_symbol
+  expression_col: mean_cpm
+
+genes:
+  type: from_csv
+  path: panels/k2000_bostrom_hw5_panel.csv
+  gene_col: Gene
+
+crowding:
+  n_trials: 1000  # simulated cells; raised from 100 for lower-variance per-gene identified fraction
+  total_reads: 8700
+  cell_size_um: 12.0
+  wavelength_nm: 500.0
+  numerical_aperture: 1.4
+  expansion_factor: 1.0
+
+initialization:
+  type: warm_start
+  path: panels/k2000_bostrom_hw5_panel.csv
+  sequence_col: Sequence
+  noise_percent: 0.0
+
+duet:
+  use_mmap: true
+  device: "gpu:all"
+  force_rebuild: false
+  sym_mem_budget_gb: 64.0
+  # As run (old convention): [0.0, 0.05, 0.10, 0.20, 0.30, 0.50, 0.70, 0.90, 1.0].
+  # Now 1 - x, sorted ascending, exact decimals (the Methods grid).
+  lambda: [0.0, 0.10, 0.30, 0.50, 0.70, 0.80, 0.90, 0.95, 1.0]
+  temperature: 0.0
+  max_iter: 100000
+  max_patience: 500
+  avoid_duplicates: false
+  num_cpus: 9
+  pep:
+    noise_channel:
+      type: asymmetric
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+    decoding_metric:
+      type: asymmetric_nll
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 30000
+    num_cpus: 30
+    seed: 43
+    scratch_dir: ../../results/scratch/merfish_2000_genes
+
+baselines:
+  - name: "Bostrom et al. (Hamming weight 5)"
+    path: panels/k2000_bostrom_hw5_panel.csv
+    gene_col: Gene
+    sequence_col: Sequence
+  - name: "MERFISH MHD4 (Hamming weight 5)"
+    path: panels/k2000_merfish_mhd4_hw5_panel.csv
+    gene_col: Gene
+    sequence_col: Sequence
+
+# Read only by scripts/benchmark/visualize_merfish.py (duet.plotting.tiers).
+# paper_panels lists debug plots that are paper panels, so the visualizer
+# writes them without --debug-plots. Paths are relative to its output dir
+# (outdir by default), without extension, with λ as in the file name (:.2f).
+# The Fig 4c inset is the λ = 0.80 panel of the jointplot sweep.
+visualization:
+  paper_panels:
+    - figures/jointplot_sweep/decode_vs_identified_jointplot_lambda0.80

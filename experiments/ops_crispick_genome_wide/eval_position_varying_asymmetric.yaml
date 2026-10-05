@@ -1,0 +1,123 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/04-24-2026/nisseq_revisualization/cross_eval/eval_positional_channel.yaml
+# (the 04-24 re-plot copy, which added the blue colors) of
+# scripts/benchmark/archive/04-02-2026/cross_eval/eval_positional_channel.yaml
+# (which ran the evaluation; its evaluator block is identical), for
+# experiments/ops_crispick_genome_wide (Supp Fig S3c). Changes, nothing else:
+#   * Schema rename (2026-06-06, cb7036e..8cd2355): evaluator.noise_model ->
+#     noise_channel, dissimilarity_function -> decoding_metric; type
+#     positional_channel (noise and metric) -> position_varying_asymmetric /
+#     position_varying_asymmetric_nll. Same classes, renamed.
+#   * outdir, reference_dir, methods[].path, cache_dir and evaluator.scratch_dir
+#     moved under this repo's results/; methods[].path points at this
+#     experiment's four phase-1 outdirs.
+#   * reference_dir is the position_varying_asymmetric run (as run: the uniform
+#     run). It only supplies trial_01/guides.csv, the pool that maps each
+#     source's pool indices to sequences and scores; all four runs build the
+#     same pool (as run, byte-identical guides.csv), and run.sh refuses to
+#     start the cross-eval unless every source's guides.csv equals it.
+#   * Noise matrix: the copy in scripts/benchmark/noise_model_matrices/
+#     channels/archive/ (sha256-identical to the as-run file). Written once, as
+#     the YAML anchor &noise_matrix. Kept as run; see README.md, "Noise
+#     matrices".
+#   * evaluator.seed: 42 added (unset as run). ComparisonConfig passes
+#     evaluator.seed to the evaluator; the top-level seed never reaches it.
+#   * Legend labels set here, in the wording and order of ops_crispri_cross_eval
+#     (adopted 2026-10-04; PROVENANCE.md records the earlier labels and the
+#     as-run order, light -> dark blue). Colors kept as run.
+#   * Feldman et al. added, with Maximum activity as the connector anchor (the
+#     S3b pattern of ops_crispri_cross_eval, adopted for S3c on
+#     2026-09-25). As run, Feldman never ran at this
+#     scale and the cross-eval selected DUET only. Sivanandan is left out:
+#     every Sivanandan codebook is invalid here, and a Sivanandan-only source
+#     fails compare_benchmarks.py's group check. See README.md, "S3c baselines".
+#   * eval_mem_budget_gb: 20.0 added (2026-09-25; the key's built-in default).
+#     Memory only: results are identical at any value. The 04-02 code re-scored
+#     one codebook at a time and had no such key (batched matmul: c100e67,
+#     a1b8bf3, 2026-04-22). The batched matmul peaks at about 1.5-2.5x the budget
+#     plus an 8.6 GB copy of the CSR row pointers: about 40-55 GB of anonymous
+#     memory at 20, about 130 GB at 64. See README.md, "Disk and memory".
+#   No lambda here: regex "DUET.*" takes every lambda of each run.
+#   Flat ComparisonConfig schema kept (compare_benchmarks.py was not migrated
+#   to the unified device/mem schema): top-level device and eval_mem_budget_gb,
+#   scratch_dir inside evaluator. cache_dir and the top-level seed are
+#   required-or-accepted by the loader but not used by compare_benchmarks.py.
+# All relative paths are relative to this folder: the loaders take them
+# verbatim (relative to the working directory) and run.sh cd's here first.
+# The archived header follows unchanged. It describes the 04-24 re-plot pass
+# (symlinked aggregated_metrics.csv, no re-evaluation); here run.sh runs
+# compare_benchmarks.py (the evaluation) and then visualize_comparison.py.
+# =============================================================================
+
+# =============================================================================
+# Re-visualization (04-24-2026): Cross-Evaluation under Positional-Channel Noise
+# =============================================================================
+# Regenerates plots from the 04-02-2026 aggregated_metrics.csv using the
+# updated visualize_comparison.py style. No re-evaluation is performed.
+#
+# aggregated_metrics.csv is expected to live under `outdir/` as a symlink
+# pointing to the 04-02-2026 source.
+#
+# DUET variants are rendered with a blue gradient (see color: entries in
+# methods list) — intensity rises with model expressiveness so the matching
+# ground-truth model (Positional-Channel) is darkest.
+#
+# Usage:
+#   python visualize_comparison.py --config cross_eval/eval_positional_channel.yaml
+# =============================================================================
+
+outdir: ../../results/experiments/ops_crispick_genome_wide/cross_eval/eval_position_varying_asymmetric
+cache_dir: ../../results/cache/ops_crispick_genome_wide
+seed: 42
+device: "gpu:all"
+eval_mem_budget_gb: 20.0
+
+reference_dir: ../../results/experiments/ops_crispick_genome_wide/position_varying_asymmetric
+
+evaluator:
+  noise_channel:
+    type: position_varying_asymmetric
+    # Noise matrix (as run; see the header). The
+    # only place the path is written: the *noise_matrix alias below reuses it.
+    channel_matrices_path: &noise_matrix ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_positional_channel_subsample.npy
+  decoding_metric:
+    type: position_varying_asymmetric_nll
+    channel_matrices_path: *noise_matrix
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 5000
+  num_cpus: 20
+  seed: 42
+  scratch_dir: ../../results/scratch/ops_crispick_genome_wide
+
+methods:
+  - path: ../../results/experiments/ops_crispick_genome_wide/position_varying_asymmetric/results.csv
+    regex: "DUET.*"
+    label: "DUET (Position-varying asymmetric error)"
+    color: "#08306b"
+
+  - path: ../../results/experiments/ops_crispick_genome_wide/asymmetric/results.csv
+    regex: "DUET.*"
+    label: "DUET (Asymmetric error)"
+    color: "#2171b5"
+
+  - path: ../../results/experiments/ops_crispick_genome_wide/position_varying/results.csv
+    regex: "DUET.*"
+    label: "DUET (Position-varying error)"
+    color: "#6baed6"
+
+  - path: ../../results/experiments/ops_crispick_genome_wide/symmetric/results.csv
+    regex: "DUET.*"
+    label: "DUET (Symmetric error)"
+    color: "#9ecae1"
+
+  # Feldman et al. ED=1 (ED=2 is one guide short, so invalid and dropped).
+  # "Maximum activity" anchors every connector line at the maximum-activity
+  # point and draws it in Feldman's color: the S3b look, adopted for S3c on
+  # 2026-09-25. (Without that line S3c would have the shipped no-anchor look,
+  # and the cross-eval would fail if the run produced no Feldman row at all.)
+  - path: ../../results/experiments/ops_crispick_genome_wide/position_varying_asymmetric/results.csv
+    regex:
+      - "Feldman et al.*"
+      - "Maximum activity"
+    label: "Feldman et al."

@@ -1,0 +1,37 @@
+# tests/regression/data/ops_config_pre.yaml
+# Pre-refactor OPS config used to capture best_indices snapshot.
+# DO NOT modify after capture; the refactor compares against this baseline.
+outdir: out/ops-snapshot  # placeholder: the tests write to a pytest tmp_path
+trials: 1
+seed: 42
+device: cpu
+
+candidate_pool:
+  source: synthetic
+  seq_rounds: 5
+  quota: 1
+  num_controls: 0
+  num_groups: 10
+  candidates_per_group: 5
+  alphabet_size: 4
+
+evaluator:
+  noise_channel:
+    type: symmetric
+    epsilon: 0.1
+  decoding_metric:
+    type: hamming
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 1000
+  num_cpus: 2
+
+duet:
+  initialization:
+    type: random
+  optimizer:
+    lambda: [0.0, 1.0]
+    temperature: 0.0
+    max_iter: 1000
+    max_patience: 200
+    num_cpus: 2

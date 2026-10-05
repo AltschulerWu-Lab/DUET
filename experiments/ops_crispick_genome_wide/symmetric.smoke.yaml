@@ -1,0 +1,73 @@
+# Smoke config (VARIANT=smoke), derived from symmetric.yaml:
+# num_groups 200 (both control groups kept, quotas 100/900), evaluator/pep num_samples 200,
+# lambda [0.0, 1.0]; trials 1 as in the real config. Outputs, caches and scratch under results/smoke/.
+# Same device (gpu:all), channel, baselines (Feldman ED 1,2; Sivanandan HD 1,2,3) and code path.
+outdir: ../../results/smoke/ops_crispick_genome_wide/symmetric
+cache_dir: ../../results/smoke/cache/ops_crispick_genome_wide
+scratch_dir: ../../results/smoke/scratch/ops_crispick_genome_wide
+trials: 1
+seed: 42
+device: gpu:all
+mem_budget_gb: 64.0
+candidate_pool:
+  source: CRISPick
+  csv_path: ../../data/processed/CRISPick/crispick_ensembl_aggrCFD_top20_candidates.csv
+  seq_rounds: 14
+  quota: 3
+  num_controls: 0
+  num_groups: 200
+  min_rank: 15
+  control_quotas:
+    NO_SITE: 100
+    ONE_SITE_INTERGENIC: 900
+evaluator:
+  noise_channel:
+    type: asymmetric
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_uniform_subsample.npy
+  decoding_metric:
+    type: asymmetric_nll
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_uniform_subsample.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 200
+  num_cpus: 20
+  seed: 42
+  mem_budget_gb: 20.0
+duet:
+  use_mmap: true
+  force_rebuild: false
+  initialization:
+    type: random
+  optimizer:
+    lambda:
+    - 0.0
+    - 1.0
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 100
+    avoid_duplicates: true
+    duplicate_penalty: 100.0
+    num_cpus: 18
+  pep:
+    noise_channel:
+      type: asymmetric
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_uniform_subsample.npy
+    decoding_metric:
+      type: asymmetric_nll
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_uniform_subsample.npy
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 200
+    num_cpus: 20
+    seed: 43
+sivanandan:
+  edit_distances:
+  - 1
+  - 2
+  - 3
+  num_cpus: 8
+feldman:
+  conda_env: ops
+  edit_distances:
+  - 1
+  - 2

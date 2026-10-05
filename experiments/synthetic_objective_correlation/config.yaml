@@ -1,0 +1,35 @@
+# =============================================================================
+# Fig 2a,b: how well each codebook objective ranks codebooks by true decode
+# accuracy, on an enumerable synthetic pool (random-tie-break decode,
+# diagonal-centered pairwise NLL).
+#
+# Migrated from
+#   scripts/benchmark/archive/08-05-2026/duet_vs_baseline_objectives_centered_nll/config.yaml
+# Only `outdir` changed. This experiment has no lambda.
+#
+# Paths: BaselineObjectivesConfig takes `outdir` verbatim, relative to the
+# working directory. run.sh cd's into this folder first, so it resolves
+# relative to this file.
+# =============================================================================
+
+outdir: ../../results/experiments/synthetic_objective_correlation
+seed: 42
+trials: 20
+
+pool:
+  num_groups: 1
+  candidates_per_group: 15
+  seq_length: 8
+  alphabet_size: 2
+  quota: 5
+
+evaluator:
+  num_samples: 10000
+  num_cpus: 20   # not read by run_rtb.py (single process); kept as run
+
+noise_channels:
+  - symmetric
+  - position_varying
+  - asymmetric
+  - position_varying_asymmetric
+error_rate: 0.2

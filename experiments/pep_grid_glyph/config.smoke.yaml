@@ -1,0 +1,5 @@
+# Smoke config (VARIANT=smoke): same code path as config.yaml; outputs under
+# results/smoke/, and the opt-in corner-radius variants switched on so that
+# flag is exercised too.
+outdir: ../../results/smoke/pep_grid_glyph
+rx_variants: true

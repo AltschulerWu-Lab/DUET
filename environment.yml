@@ -1,0 +1,18 @@
+# CPU development environment: the duet-codebook package plus the
+# `benchmark` and `test` extras (everything scripts/benchmark/ and the test
+# suite need). Create it from the repository root:
+#
+#   conda env create -f environment.yml
+#   conda activate duet
+#
+# For GPU acceleration (recommended for real libraries), then add the
+# `gpu` extra to the editable install: pip install -e ".[gpu]"
+# (docs/installation.md explains the CuPy choice for your CUDA version).
+name: duet
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - -e ".[benchmark,test]"

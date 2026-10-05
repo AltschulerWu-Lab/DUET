@@ -1,0 +1,141 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/06-28-2026/zhang_2023/zhang_v2.yaml
+# for experiments/merfish_zhang2023_v2. Changes, nothing else:
+#   * duet.lambda rewritten as 1 - x (lambda now weights decoding accuracy;
+#     docs/adr/0001-lambda-weights-decoding-accuracy.md).
+#   * outdir, cache_dir and both scratch_dir keys moved under this repo's results/.
+#   * channel_matrix_path (4x) and expression.path rewritten as repo paths.
+#     expression.path is the de-duplicated WMB-10X table (sha256 a8314155...),
+#     not the stale table the as-run bundle used. It holds Allen Brain Cell
+#     Atlas values, which are not shipped: build it with
+#     scripts/wmb10x/build_whole_brain_cpm.py.
+#   * the Zhang v2 codebook path (genes, initialization, baseline #3) rewritten
+#     as a repo path in the gitignored data/processed/BIL_MERFISH/. Build the
+#     file with scripts/data_processing/build_zhang2023_codebook.py.
+#   * the two Bostrom baselines keep their `panels/...` paths, which now name
+#     the panels rebuilt by make_panels.sh against that table.
+#   * duet.pep.seed 42 -> 43; evaluator.seed stays 42. Both spawn one child
+#     stream per index from their root seed, so with one seed PEP batch j and
+#     ground-truth union row j start from the same stream. Distinct seeds keep
+#     the PEP's Monte Carlo independent of the ground truth's, as in the OPS
+#     experiments. The PEP counts are a new draw; the evaluator's are as run.
+#   * the `visualization` block at the end is new. Only the visualizer reads it.
+# Paths: MerfishBenchmarkConfig resolves outdir, cache_dir, expression.path,
+# genes.path, initialization.path and baselines[].path against this file's
+# folder; channel_matrix_path and scratch_dir are taken verbatim (relative to
+# the working directory). run.sh cd's into this folder first, so all of them
+# resolve relative to this file. run.sh also creates scratch_dir.
+# crowding.n_trials is 1000 as in the archived YAML; the shipped results were
+# re-evaluated at 1000 trials after the run (recompute_crowding.py, 06-29).
+# The archived header follows unchanged; the files it refers to (README.md,
+# sibling configs) are those of the archive bundle scripts/benchmark/archive/06-28-2026/zhang_2023/
+# =============================================================================
+# =============================================================================
+# Figure 4 MERFISH — Zhang-2023 paper panel (v2, 1147 genes), WHOLE-BRAIN
+# expression. 32-bit MHD-4; warm-starts from the published Zhang v2 codebook.
+# Crowding + expression parameters follow gene_count_scaling/k2000.
+# Baselines: Bostrom HW4/HW5 (WMB-10X-assigned) + the Zhang v2 codebook.
+# unique_minimum decoding; Zhang-2023 channel; GPU.
+# =============================================================================
+seed: 42
+outdir: ../../results/experiments/merfish_zhang2023_v2
+cache_dir: ../../results/cache/merfish_zhang2023_v2
+
+candidates:
+  seq_rounds: 32
+  codebook_size: 1147
+  hamming_weights: [4, 5]
+  hamming_weight_limits:
+    5: 64040
+  per_codeword_sample_size: 1000
+  sample_seed: 42
+
+evaluator:
+  device: "gpu:all"
+  mem_budget_gb: 20.0
+  noise_channel:
+    type: asymmetric
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+  decoding_metric:
+    type: asymmetric_nll
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 5000
+  num_cpus: 30
+  seed: 42
+  scratch_dir: ../../results/scratch/merfish_zhang2023_v2
+
+expression:
+  path: ../../examples/data/processed/WMB-10X/whole_brain_per_gene_cpm.csv
+  gene_col: gene_symbol
+  expression_col: mean_cpm
+
+genes:
+  type: from_csv
+  path: ../../data/processed/BIL_MERFISH/codebooks/zhang_2023_v2_processed.csv
+  gene_col: Gene
+
+crowding:
+  n_trials: 1000  # simulated cells; raised from 100 for lower-variance per-gene identified fraction
+  total_reads: 8700
+  cell_size_um: 12.0
+  wavelength_nm: 500.0
+  numerical_aperture: 1.4
+  expansion_factor: 1.0
+
+initialization:
+  type: warm_start
+  path: ../../data/processed/BIL_MERFISH/codebooks/zhang_2023_v2_processed.csv
+  sequence_col: Sequence
+  noise_percent: 0.0
+
+duet:
+  use_mmap: true
+  device: "gpu:all"
+  force_rebuild: false
+  sym_mem_budget_gb: 64.0
+  # As run (old convention): [0.0, 0.05, 0.10, 0.20, 0.30, 0.50, 0.70, 0.90, 1.0].
+  # Now 1 - x, sorted ascending, exact decimals (the Methods grid).
+  lambda: [0.0, 0.10, 0.30, 0.50, 0.70, 0.80, 0.90, 0.95, 1.0]
+  temperature: 0.0
+  max_iter: 100000
+  max_patience: 500
+  avoid_duplicates: false
+  num_cpus: 9
+  pep:
+    noise_channel:
+      type: asymmetric
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+    decoding_metric:
+      type: asymmetric_nll
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 30000
+    num_cpus: 30
+    seed: 43
+    scratch_dir: ../../results/scratch/merfish_zhang2023_v2
+
+baselines:
+  - name: "Bostrom et al. (Hamming weight 4)"
+    path: panels/zhang_v2_bostrom_hw4_panel.csv
+    gene_col: Gene
+    sequence_col: Sequence
+  - name: "Bostrom et al. (Hamming weight 5)"
+    path: panels/zhang_v2_bostrom_hw5_panel.csv
+    gene_col: Gene
+    sequence_col: Sequence
+  - name: "Zhang et al. codebook #2"
+    path: ../../data/processed/BIL_MERFISH/codebooks/zhang_2023_v2_processed.csv
+    gene_col: Gene
+    sequence_col: Sequence
+
+# Read only by scripts/benchmark/visualize_merfish.py (duet.plotting.tiers).
+# paper_panels lists debug plots that are paper panels, so the visualizer
+# writes them without --debug-plots. Paths are relative to its output dir
+# (outdir by default), without extension, with λ as in the file name (:.2f).
+# The Fig 4b inset is the λ = 0.80 panel of the jointplot sweep.
+visualization:
+  paper_panels:
+    - figures/jointplot_sweep/decode_vs_identified_jointplot_lambda0.80

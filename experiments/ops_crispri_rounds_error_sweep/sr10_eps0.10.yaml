@@ -1,0 +1,122 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/08-20-2026/robustness_sweep/sr10_eps0.10.yaml
+# for experiments/ops_crispri_rounds_error_sweep (Fig 3c), the grid as run on
+# 2026-09-02 (RESULTS_DATE 09-02-2026, 31-value lambda grid). GENERATED FILE:
+# edit make_configs.py in this folder, then run `python make_configs.py`.
+# Changes, nothing else:
+#   * duet.optimizer.lambda rewritten as 1 - x (lambda now weights decoding
+#     accuracy; docs/adr/0001-lambda-weights-decoding-accuracy.md), sorted
+#     ascending, exact decimals; its comment rewritten in the new convention.
+#   * outdir, cache_dir, scratch_dir moved under this repo's results/; the path
+#     comment rewritten.
+#   * evaluator.seed: 42 and duet.pep.seed: 43 added (both unset as run), as in
+#     experiments/ops_crispri_symmetric: the PEP gets its own seed so its Monte
+#     Carlo streams are independent of the ground truth's (both spawn one child
+#     stream per index from their root seed). The top-level seed only sets the
+#     trial seeds.
+#   * duet.optimizer.num_cpus comment extended (value kept as run).
+# The archived header follows unchanged. Its make_configs.py is now this
+# folder's copy; the spec and template it names are the as-run ones.
+# =============================================================================
+
+# =============================================================================
+# OPS robustness sweep -- 10 sequencing rounds, symmetric epsilon = 0.1
+# =============================================================================
+# GENERATED FILE -- do not edit by hand.
+# Regenerate with:  python make_configs.py
+# Edits belong in make_configs.py (CONFIG_TEMPLATE / GRID).
+#
+# One point of the rounds x epsilon robustness sweep. Derived from the config
+# of the original ops_crispri_symmetric run (experiments/ops_crispri_symmetric/
+# config.yaml is its copy); only outdir, candidate_pool.seq_rounds and the two
+# noise_channel epsilons vary across the 18 points.
+#
+# Scalar epsilon applied identically at every position and symbol, paired with
+# the plain Hamming decoding metric: under a symmetric channel Hamming distance
+# is monotone-equivalent to the symmetric NLL, so unique_minimum decoding gives
+# identical decisions at lower cost.
+# =============================================================================
+
+# Paths: OpsBenchmarkConfig takes outdir, cache_dir and scratch_dir verbatim,
+# relative to the working directory. run.sh cd's into this folder first, so
+# they resolve relative to this file. scratch_dir must already exist
+# (tempfile.mkdtemp does not create it); run.sh creates it. All 18 points share
+# cache_dir; each PEP's fingerprint covers its library and channel.
+outdir: ../../results/experiments/ops_crispri_rounds_error_sweep/sr10_eps0.10
+cache_dir: ../../results/cache/ops_crispri_rounds_error_sweep
+scratch_dir: ../../results/scratch/ops_crispri_rounds_error_sweep
+trials: 5
+seed: 42
+device: "gpu:all"
+mem_budget_gb: 64.0
+
+candidate_pool:
+  source: WeissmanCRISPRi
+  seq_rounds: 10
+  quota: 2
+  num_controls: 200
+  num_groups: 1000
+  min_rank: 10
+
+evaluator:
+  noise_channel:
+    type: symmetric
+    epsilon: 0.1
+  decoding_metric:
+    type: hamming
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 2000
+  num_cpus: 30
+  seed: 42
+
+duet:
+  use_mmap: true
+  force_rebuild: false
+  initialization:
+    type: random
+  optimizer:
+    # As run (old convention, lambda_old = 1 - lambda): [0.0, 0.05, ..., 0.75,
+    # 0.8, 0.825, 0.85, 0.875, 0.9, 0.91, ..., 0.99, 1.0]. Now 1 - x, sorted
+    # ascending, exact decimals.
+    # 31 values, a strict superset of the 18-value Fig 3b grid that the
+    # 2026-08-20 run used (nothing dropped). The 13 additions fill (0.25, 0.5)
+    # and (0.5, 1.0), which that run left unsampled: activity falls as lambda
+    # rises, and at low epsilon / long reads the 97.5% activity floor falls
+    # inside that band. With nothing there, 10 of 18 points were forced to
+    # lambda=0.5 and overshot the floor by up to 0.02 activity, understating
+    # DUET's gain and invalidating the Sivanandan ED=3 comparison. The 0.01
+    # spacing across 0.05-0.10 is kept: that is where the high-epsilon /
+    # short-read points cross the floor.
+    lambda: [0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
+             0.125, 0.15, 0.175, 0.2, 0.25,
+             0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95,
+             1.0]
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 3000
+    avoid_duplicates: true
+    duplicate_penalty: 100.0
+    # One scheduling wave: must be >= the number of lambda values above.
+    # Kept as run. Speed only (each lambda job reseeds itself); 31 workers
+    # oversubscribe the 20 physical cores of the as-run host.
+    num_cpus: 31
+  pep:
+    noise_channel:
+      type: symmetric
+      epsilon: 0.1
+    decoding_metric:
+      type: hamming
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 5000
+    num_cpus: 30
+    seed: 43
+
+sivanandan:
+  edit_distances: [1, 2, 3]
+  num_cpus: 8
+
+feldman:
+  conda_env: ops
+  edit_distances: [1, 2]

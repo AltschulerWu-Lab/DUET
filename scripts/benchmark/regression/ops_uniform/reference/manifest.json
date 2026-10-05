@@ -1,0 +1,9 @@
+{
+  "git_sha": "bb738fa7cbb17f0cdb16f7d26d3f36a364f244a6",
+  "recorded_at": "2026-09-23T15:48:33",
+  "rtol": 1e-06,
+  "atol": 1e-09,
+  "files": [
+    "results.csv"
+  ]
+}

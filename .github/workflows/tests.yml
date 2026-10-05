@@ -1,0 +1,73 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    # Core install, default selection: slow tests excluded, GPU tests and
+    # benchmark-layer tests skip without CuPy / the benchmark extra.
+    name: tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pip
+      - run: pip install ".[test]"
+      - run: python -m pytest
+
+  oldest:
+    # The lower bounds of pyproject.toml, pinned (the paper environment).
+    name: oldest supported versions (Python 3.11)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -c ci/constraints-oldest.txt ".[benchmark,test]"
+      - run: python -m pytest
+
+  benchmark-and-regression:
+    # The benchmark layer and the regression suites (CPU parts; the GPU
+    # regression harness, scripts/benchmark/regression/run_regression.py,
+    # needs GPUs and runs outside CI).
+    name: benchmark layer and regression suites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install ".[test,benchmark]"
+      - run: python -m pytest
+      - run: python -m pytest tests/regression scripts/benchmark/regression/tests -m ""
+
+  quickstarts:
+    # Runs both demos of examples/ as a reviewer would (python
+    # examples/quickstart_*.py OUTDIR) and checks their printed tables
+    # against the output recorded in each script's docstring.
+    name: quickstart demos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install ".[test]"
+      - run: python -m pytest tests/test_quickstarts.py -m slow -v

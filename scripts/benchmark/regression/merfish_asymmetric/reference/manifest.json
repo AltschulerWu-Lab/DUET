@@ -1,0 +1,21 @@
+{
+  "git_sha": "c1a9660af6cf24bd1f3fb38ffe2d32369c336fbd",
+  "recorded_at": "2026-09-11T15:15:15",
+  "rtol": 1e-06,
+  "atol": 1e-09,
+  "files": [
+    "results.csv",
+    "metrics.csv",
+    "summary.yaml",
+    "candidates.csv",
+    "selected_codewords_lambda0.00.csv",
+    "selected_codewords_lambda0.10.csv",
+    "selected_codewords_lambda0.30.csv",
+    "selected_codewords_lambda0.50.csv",
+    "selected_codewords_lambda0.70.csv",
+    "selected_codewords_lambda0.80.csv",
+    "selected_codewords_lambda0.90.csv",
+    "selected_codewords_lambda0.95.csv",
+    "selected_codewords_lambda1.00.csv"
+  ]
+}

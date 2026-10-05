@@ -1,0 +1,93 @@
+# merfish_asymmetric regression fixture: 16-bit MERFISH, asymmetric channel
+# (Chen 2015, inlined), pairwise_posterior_threshold decoding, warm-start from
+# codebook_1, optical-crowding objective.
+# outdir, cache_dir and the input tables resolve against this file's folder
+# (resolve_config_path); the scratch_dir keys resolve against the working
+# directory, which run_regression.py sets to this folder, so run the fixture
+# through run_regression.py. Outputs, the PEP cache and the scratch files all
+# go under the repository's results/ folder.
+seed: 42
+outdir: ../../../../results/benchmark/regression/merfish_asymmetric
+cache_dir: ../../../../results/cache/regression
+
+candidates:
+  seq_rounds: 16
+  codebook_size: 140
+  hamming_weights: [3, 4, 5]
+
+evaluator:
+  noise_channel:
+    type: asymmetric
+    channel_matrix: [[0.96, 0.04], [0.1, 0.9]]
+  decoding_metric:
+    type: asymmetric_nll
+    channel_matrix: [[0.96, 0.04], [0.1, 0.9]]
+  decoding_rule:
+    type: pairwise_posterior_threshold
+    threshold: 0.75
+  num_samples: 10000
+  num_cpus: 10
+  seed: 42
+  scratch_dir: ../../../../results/scratch/regression
+
+expression:
+  path: ../../../../examples/data/processed/Kastriki_et_al_2022/sensory_neuron_mean_expression.csv
+  gene_col: gene_name
+  expression_col: mean_raw_counts
+
+genes:
+  type: random
+  pool_filter: top_percentile
+  pool_filter_value: 1
+  exclude_controls: true
+
+crowding:
+  n_trials: 5
+  total_reads: 100000
+  cell_size_um: 100.0
+  wavelength_nm: 500.0
+  numerical_aperture: 1.4
+  expansion_factor: 1.0
+  # Pinned to the Boström et al. 2025 optical model (these are also the current
+  # CrowdingConfig defaults). Explicit so a future default change cannot
+  # silently shift the crowding columns of this golden reference.
+  diffraction_model: abbe   # lambda/(2*NA); Boström uses Abbe, not Rayleigh
+  neighborhood: box         # Chebyshev MinDist box, matches SimulatingCode.R
+
+initialization:
+  type: warm_start
+  path: ../../../../examples/data/processed/MERFISH/codebook_1.csv
+  sequence_col: Sequence
+  noise_percent: 0.0
+
+duet:
+  use_mmap: true
+  device: "gpu:all"
+  force_rebuild: true
+  sym_mem_budget_gb: 64.0
+  lambda: [0.0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 1.0]
+  temperature: 0.0
+  max_iter: 100000
+  max_patience: 500
+  avoid_duplicates: false
+  num_cpus: 9
+  pep:
+    noise_channel:
+      type: asymmetric
+      channel_matrix: [[0.96, 0.04], [0.1, 0.9]]
+    decoding_metric:
+      type: asymmetric_nll
+      channel_matrix: [[0.96, 0.04], [0.1, 0.9]]
+    decoding_rule:
+      type: pairwise_posterior_threshold
+      threshold: 0.75
+    num_samples: 10000
+    num_cpus: 10
+    seed: 42
+    scratch_dir: ../../../../results/scratch/regression
+
+baselines:
+  - name: codebook_1
+    path: ../../../../examples/data/processed/MERFISH/codebook_1.csv
+    gene_col: Gene
+    sequence_col: Sequence

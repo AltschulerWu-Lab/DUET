@@ -1,0 +1,74 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/09-08-2026/2d_synthetic_dense_lambda/small_config.yaml
+# for experiments/synthetic_hvr (Supp Fig S1). Changes, nothing else:
+#   * outdir moved under this repo's results/ (no `small/` suffix).
+#   * comment on the lambda grids (values unchanged; see below).
+# Paths: the runner takes outdir verbatim (relative to the working
+# directory); run.sh cd's into this folder first. The runner hard-codes its
+# PEP cache at <outdir>/artifacts/pep_cache and ignores evaluator.scratch_dir
+# (run.sh points TMPDIR at results/scratch/synthetic_hvr instead).
+# The archived header follows unchanged; the files it refers to (README.md,
+# sibling configs) are those of the archive bundle scripts/benchmark/archive/09-08-2026/2d_synthetic_dense_lambda/
+# =============================================================================
+
+# 2-D Synthetic Benchmark — small (enumerable) regime, dense-lambda re-run.
+# 2026-09-08 archive. Supersedes 05-11-2026/2d_synthetic_hvr_validation as the
+# source of Supplementary Fig. S1a. See README.md for the diagnosis that
+# motivated this run.
+#
+# Deltas vs 05-11-2026/2d_synthetic_hvr_validation/small_config.yaml:
+#   * lambda grid: 12 values {0, 0.1, ..., 0.9, 0.95, 1} -> 101 values
+#     {0, 0.01, ..., 1.00}, applied identically to DUET and both greedy
+#     baselines. On this pool the decode-accuracy spread across the true front
+#     (~0.02) is an order of magnitude smaller than the score spread (~0.3),
+#     so the old grid collapsed every lambda >= 0.1 onto the max-score corner.
+#   * evaluator.num_samples: 2,000 -> 20,000 (both the ground-truth evaluator
+#     and DUET's PEP; the runner uses one value for both). Must stay <= 32,767
+#     (uint16 PEP count storage).
+#   * device: gpu:all (evaluator cache + PEP on all GPUs; swap search on CPU).
+#   * duet.optimizer.num_cpus: 20 -> 40 (101 lambdas per cell; 3 rounds).
+#   * noise channel names use the current schema (symmetric, ...); the 05-11
+#     run used the pre-rename names (uniform, ...). Same channels.
+#
+# Pool: 5 groups x 5 candidates x quota 1 = 5^5 = 3,125 codebooks per cell,
+# below ENUM_THRESHOLD; runner auto-classifies regime="small" and enumerates
+# the true Pareto front. 4 channels x 3 error rates x 5 trials = 60 cells.
+
+outdir: ../../results/experiments/synthetic_hvr
+seed: 42
+trials: 5
+device: "gpu:all"
+
+pool:
+  num_groups: 5
+  candidates_per_group: 5
+  seq_length: 8
+  alphabet_size: 2
+  quota: 1
+
+evaluator:
+  num_samples: 20000
+  num_cpus: 20   # CPU fallback only; unused when device is a GPU spec.
+
+noise_channels: ["symmetric", "position_varying", "asymmetric", "position_varying_asymmetric"]
+error_rates: [0.05, 0.1, 0.2]
+
+duet:
+  optimizer:
+    # Lambda migration (docs/adr/0001-lambda-weights-decoding-accuracy.md): this
+    # 101-point grid, and the two greedy grids below, are symmetric under
+    # x -> 1 - x, so the migrated set equals the as-run set and is kept
+    # verbatim. Each value now names the mirrored operating point.
+    # IMPORTANT: key is `lambda` (singular), not `lambdas`.
+    # DuetOptimizerConfig.from_dict reads d["lambda"] (required; a 'lambdas:' key is silently ignored).
+    lambda: [0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38, 0.39, 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.68, 0.69, 0.70, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.80, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1.00]
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 3000
+    num_cpus: 40
+
+greedy_hamming_mo:
+  lambda: [0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38, 0.39, 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.68, 0.69, 0.70, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.80, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1.00]
+
+greedy_nll_mo:
+  lambda: [0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38, 0.39, 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.68, 0.69, 0.70, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.80, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1.00]

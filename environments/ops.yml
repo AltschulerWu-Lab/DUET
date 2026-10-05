@@ -1,0 +1,32 @@
+# `ops` environment for the Feldman et al. baseline (OpticalPooledScreens).
+# Needed only to reproduce the paper's Feldman comparisons: the OPS benchmark
+# runner calls `conda run -n ops python .../external_ops/ops_wrapper.py`
+# (src/duet/benchmark/feldman_runner.py). See environments/README.md.
+#
+# Exported on 2026-09-24 from the lab's `ops` env (Python 3.7.12) with
+# `conda env export --from-history`; the pip section records how
+# OpticalPooledScreens was installed there (a git checkout of this commit,
+# installed with `python setup.py develop`). snakemake came from bioconda.
+name: ops
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.7
+  - fire
+  - imageio
+  - jupyter
+  - natsort
+  - networkx
+  - pandas
+  - pytables
+  - python-levenshtein
+  - scikit-image
+  - seaborn
+  - snakemake
+  - tqdm
+  - xlrd
+  - openpyxl
+  - pip
+  - pip:
+      - "git+https://github.com/feldman4/OpticalPooledScreens.git@5417bf437290e263c72a7d6875afe26e8921858c"

@@ -1,0 +1,44 @@
+# Smoke config (VARIANT=smoke), derived from eval_position_varying_asymmetric.yaml:
+# reads the four arm smoke outputs; evaluator num_samples 200. Same sources (4 DUET + Feldman with
+# the Maximum-activity anchor), labels, colors, device and code path. Outputs and scratch under results/smoke/.
+outdir: ../../results/smoke/ops_crispick_genome_wide/cross_eval/eval_position_varying_asymmetric
+cache_dir: ../../results/smoke/cache/ops_crispick_genome_wide
+seed: 42
+device: gpu:all
+eval_mem_budget_gb: 20.0
+reference_dir: ../../results/smoke/ops_crispick_genome_wide/position_varying_asymmetric
+evaluator:
+  noise_channel:
+    type: position_varying_asymmetric
+    channel_matrices_path: ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_positional_channel_subsample.npy
+  decoding_metric:
+    type: position_varying_asymmetric_nll
+    channel_matrices_path: ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_positional_channel_subsample.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 200
+  num_cpus: 20
+  seed: 42
+  scratch_dir: ../../results/smoke/scratch/ops_crispick_genome_wide
+methods:
+- path: ../../results/smoke/ops_crispick_genome_wide/position_varying_asymmetric/results.csv
+  regex: DUET.*
+  label: DUET (Position-varying asymmetric error)
+  color: '#08306b'
+- path: ../../results/smoke/ops_crispick_genome_wide/asymmetric/results.csv
+  regex: DUET.*
+  label: DUET (Asymmetric error)
+  color: '#2171b5'
+- path: ../../results/smoke/ops_crispick_genome_wide/position_varying/results.csv
+  regex: DUET.*
+  label: DUET (Position-varying error)
+  color: '#6baed6'
+- path: ../../results/smoke/ops_crispick_genome_wide/symmetric/results.csv
+  regex: DUET.*
+  label: DUET (Symmetric error)
+  color: '#9ecae1'
+- path: ../../results/smoke/ops_crispick_genome_wide/position_varying_asymmetric/results.csv
+  regex:
+  - Feldman et al.*
+  - Maximum activity
+  label: Feldman et al.

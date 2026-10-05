@@ -1,0 +1,25 @@
+# Smoke config (VARIANT=smoke): config.yaml with trials 1 and num_samples 200,
+# outdir under results/smoke/. Same code path; config.yaml has the full
+# description.
+
+outdir: ../../results/smoke/synthetic_objective_correlation
+seed: 42
+trials: 1
+
+pool:
+  num_groups: 1
+  candidates_per_group: 15
+  seq_length: 8
+  alphabet_size: 2
+  quota: 5
+
+evaluator:
+  num_samples: 200
+  num_cpus: 20   # not read by run_rtb.py (single process); kept as run
+
+noise_channels:
+  - symmetric
+  - position_varying
+  - asymmetric
+  - position_varying_asymmetric
+error_rate: 0.2

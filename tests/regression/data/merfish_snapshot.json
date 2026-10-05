@@ -1,0 +1,11 @@
+{
+  "config_hash": "0573bbddd832923c36e79faca23f2617112955cbbda6f084c85cd2f7e2fd9928",
+  "config_hash_method": "sha256 of merfish_config_post.yaml",
+  "note": "regenerated 2026-09-11 after the lambda-convention flip (lambda weights decoding accuracy; lambda=1 is decode-only)",
+  "seed": 42,
+  "per_lambda": {
+    "1.0": {
+      "decode_accuracy": 0.8622500000000001
+    }
+  }
+}

@@ -1,0 +1,43 @@
+# Smoke config (VARIANT=smoke): config.yaml with trials 1, error_rates [0.2],
+# num_samples 500 and lambda [0.0, 1.0] for all three methods; outdir under
+# results/smoke/. Same device and code path; config.yaml has the full
+# description.
+
+outdir: ../../results/smoke/synthetic_hvr
+seed: 42
+trials: 1
+device: "gpu:all"
+
+pool:
+  num_groups: 5
+  candidates_per_group: 5
+  seq_length: 8
+  alphabet_size: 2
+  quota: 1
+
+evaluator:
+  num_samples: 500
+  num_cpus: 20   # CPU fallback only; unused when device is a GPU spec.
+
+noise_channels: ["symmetric", "position_varying", "asymmetric", "position_varying_asymmetric"]
+error_rates: [0.2]
+
+duet:
+  optimizer:
+    # Lambda migration (docs/adr/0001-lambda-weights-decoding-accuracy.md): this
+    # 101-point grid, and the two greedy grids below, are symmetric under
+    # x -> 1 - x, so the migrated set equals the as-run set and is kept
+    # verbatim. Each value now names the mirrored operating point.
+    # IMPORTANT: key is `lambda` (singular), not `lambdas`.
+    # DuetOptimizerConfig.from_dict reads d["lambda"] (required; a 'lambdas:' key is silently ignored).
+    lambda: [0.0, 1.0]
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 3000
+    num_cpus: 40
+
+greedy_hamming_mo:
+  lambda: [0.0, 1.0]
+
+greedy_nll_mo:
+  lambda: [0.0, 1.0]

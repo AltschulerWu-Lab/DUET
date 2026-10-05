@@ -1,0 +1,114 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "duet-codebook"
+version = "0.2.0"
+description = "DUET (Decoding Unified with Experimental Trade-offs): multi-objective codebook design for barcode-based assays"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [
+    { name = "Lee Rao", email = "lee.rao@ucsf.edu" },
+    { name = "Lani F. Wu" },
+    { name = "Steven J. Altschuler" },
+]
+keywords = [
+    "codebook design",
+    "barcodes",
+    "error correction",
+    "multi-objective optimization",
+    "Pareto front",
+    "optical pooled screens",
+    "CRISPR",
+    "MERFISH",
+    "spatial transcriptomics",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+# Core: what `import duet` and the public API need. Lower bounds are the
+# versions of the paper environment, which the "oldest" CI job pins
+# (ci/constraints-oldest.txt).
+dependencies = [
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.2",
+    "pandas>=3.0.0",
+    "psutil>=7.2.2",
+    "scipy>=1.17.0",
+    "threadpoolctl>=3.6.0",
+    "tqdm>=4.67.3",
+]
+
+[project.optional-dependencies]
+# GPU (recommended for real libraries): CuPy computes the PEP matrix and the
+# Monte Carlo evaluation on NVIDIA GPUs; the lambda sweep always runs on CPU,
+# one process per lambda. This extra installs the CuPy wheel for CUDA 12.x,
+# which runs with any driver that supports CUDA 12 or newer. cupy-cuda13x is
+# an untested alternative; CUDA 11 is not supported (the newest cupy-cuda11x
+# is below the lower bound). See docs/installation.md. Without it, DUET runs
+# on CPU, which suits small problems and the demos.
+# Lower bound: the CuPy version of the paper environment (conda-forge cupy
+# 14.0.1). CI has no GPU runners, so this extra is checked by hand
+# (cupy-cuda12x 14.2.0 on 4 TITAN X GPUs, CUDA 12 driver, 2026-09-25).
+gpu = ["cupy-cuda12x>=14.0.1"]
+# Everything scripts/benchmark/ and experiments/ need to reproduce the
+# paper's benchmarks (baselines, hypervolumes, YAML configs, parquet I/O).
+benchmark = [
+    "pyarrow>=24.0.0",
+    "pymoo>=0.6.1.6",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+    "scikit-learn>=1.8.0",
+    "seaborn>=0.13.2",
+]
+# Runs the notebook of experiments/nisseq_error_analysis headless (nbconvert
+# with a python3 kernel). Lower bounds are the versions of the paper
+# environment.
+notebooks = [
+    "nbconvert>=7.17.0",
+    "nbformat>=5.10.4",
+    "ipykernel>=7.2.0",
+]
+test = ["pytest>=9.0.2"]
+all = [
+    "duet-codebook[gpu,benchmark,notebooks,test]",
+]
+
+[project.urls]
+Repository = "https://github.com/AltschulerWu-Lab/DUET"
+Issues = "https://github.com/AltschulerWu-Lab/DUET/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["duet", "duet.*"]
+exclude = [
+    "duet.archive", "duet.archive.*",
+    "*.tests", "*.tests.*",
+    "*.temp", "*.temp.*",
+]
+
+[tool.setuptools.package-data]
+"duet.plotting" = ["*.mplstyle"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The repository root goes on sys.path so tests can import scripts.benchmark.*.
+pythonpath = ["."]
+# The default run skips slow tests; select them with `pytest -m slow`, or run
+# everything with `pytest -m ""`.
+addopts = ["-m", "not slow"]
+markers = [
+    "slow: takes more than about 30 s, or needs the GPUs for a long run; excluded by default",
+    "gpu: needs CuPy and a CUDA GPU; skipped automatically without them",
+]

@@ -1,0 +1,94 @@
+# Smoke config (VARIANT=smoke), derived from config.yaml:
+# all genes kept; per_codeword_sample_size 3 (pool of 3,931 candidates instead of 100,000), evaluator/pep
+# num_samples 50, lambda [0.8, 0.9] (the operating points read downstream), max_iter 200,
+# max_patience 50, crowding n_trials 2.
+# Outputs, caches and scratch under results/smoke/. Same device and code path.
+seed: 42
+outdir: ../../results/smoke/merfish_2000_genes
+cache_dir: ../../results/smoke/cache/merfish_2000_genes
+candidates:
+  seq_rounds: 32
+  codebook_size: 2000
+  hamming_weights:
+  - 4
+  - 5
+  hamming_weight_limits:
+    5: 64040
+  per_codeword_sample_size: 3
+  sample_seed: 42
+evaluator:
+  device: gpu:all
+  mem_budget_gb: 20.0
+  noise_channel:
+    type: asymmetric
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+  decoding_metric:
+    type: asymmetric_nll
+    channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 50
+  num_cpus: 30
+  seed: 42
+  scratch_dir: ../../results/smoke/scratch/merfish_2000_genes
+expression:
+  path: ../../examples/data/processed/WMB-10X/whole_brain_per_gene_cpm.csv
+  gene_col: gene_symbol
+  expression_col: mean_cpm
+genes:
+  type: from_csv
+  path: panels/k2000_bostrom_hw5_panel.csv
+  gene_col: Gene
+crowding:
+  n_trials: 2
+  total_reads: 8700
+  cell_size_um: 12.0
+  wavelength_nm: 500.0
+  numerical_aperture: 1.4
+  expansion_factor: 1.0
+initialization:
+  type: warm_start
+  path: panels/k2000_bostrom_hw5_panel.csv
+  sequence_col: Sequence
+  noise_percent: 0.0
+duet:
+  use_mmap: true
+  device: gpu:all
+  force_rebuild: false
+  sym_mem_budget_gb: 64.0
+  lambda:
+  - 0.8
+  - 0.9
+  temperature: 0.0
+  max_iter: 200
+  max_patience: 50
+  avoid_duplicates: false
+  num_cpus: 9
+  pep:
+    noise_channel:
+      type: asymmetric
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+    decoding_metric:
+      type: asymmetric_nll
+      channel_matrix_path: ../../scripts/benchmark/noise_model_matrices/channels/merfish_zhang2023_channel.npy
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 50
+    num_cpus: 30
+    seed: 43
+    scratch_dir: ../../results/smoke/scratch/merfish_2000_genes
+baselines:
+- name: Bostrom et al. (Hamming weight 5)
+  path: panels/k2000_bostrom_hw5_panel.csv
+  gene_col: Gene
+  sequence_col: Sequence
+- name: MERFISH MHD4 (Hamming weight 5)
+  path: panels/k2000_merfish_mhd4_hw5_panel.csv
+  gene_col: Gene
+  sequence_col: Sequence
+
+# As in config.yaml: the lambda = 0.80 jointplot inset is a paper panel, so the
+# visualizer writes it without --debug-plots (lambda above includes 0.80).
+visualization:
+  paper_panels:
+  - figures/jointplot_sweep/decode_vs_identified_jointplot_lambda0.80

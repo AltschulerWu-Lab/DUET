@@ -1,0 +1,28 @@
+# tests/regression/data/merfish_config_pre.yaml
+# Pre-refactor MERFISH config used to capture best_indices + decode snapshot.
+# DO NOT modify after capture; the refactor compares against this baseline.
+# optical_crowding is absent — tests the pure-decode path (cw=None -> lambda=0 equivalent).
+outdir: out/merfish-snapshot  # placeholder: the tests write to a pytest tmp_path
+seed: 42
+
+candidates:
+  seq_rounds: 16
+  codebook_size: 20
+  hamming_weights: [4]
+
+evaluator:
+  noise_channel:
+    type: symmetric
+    epsilon: 0.1
+  decoding_metric:
+    type: hamming
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 1000
+  num_cpus: 2
+
+duet:
+  optimizer:
+    temperature: 0.0
+    max_iter: 1000
+    max_patience: 200

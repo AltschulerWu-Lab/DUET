@@ -1,0 +1,67 @@
+# Smoke config (VARIANT=smoke), derived from position_varying.yaml:
+# trials 1, num_groups 50, num_controls 20, evaluator/pep num_samples 200, lambda [0.0, 1.0].
+# Outputs, caches and scratch under results/smoke/. Same device and code path.
+outdir: ../../results/smoke/ops_crispri_cross_eval/position_varying
+cache_dir: ../../results/smoke/cache/ops_crispri_cross_eval
+scratch_dir: ../../results/smoke/scratch/ops_crispri_cross_eval
+trials: 1
+seed: 42
+device: gpu:all
+mem_budget_gb: 64.0
+candidate_pool:
+  source: WeissmanCRISPRi
+  seq_rounds: 10
+  quota: 2
+  num_controls: 20
+  num_groups: 50
+  min_rank: 10
+evaluator:
+  noise_channel:
+    type: position_varying
+    epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+  decoding_metric:
+    type: position_varying_nll
+    epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 200
+  num_cpus: 30
+  seed: 42
+duet:
+  use_mmap: true
+  force_rebuild: false
+  initialization:
+    type: random
+  optimizer:
+    lambda:
+    - 0.0
+    - 1.0
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 3000
+    avoid_duplicates: true
+    duplicate_penalty: 100.0
+    num_cpus: 18
+  pep:
+    noise_channel:
+      type: position_varying
+      epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+    decoding_metric:
+      type: position_varying_nll
+      epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 200
+    num_cpus: 30
+    seed: 43
+sivanandan:
+  edit_distances:
+  - 1
+  - 2
+  - 3
+  num_cpus: 8
+feldman:
+  conda_env: ops
+  edit_distances:
+  - 1
+  - 2

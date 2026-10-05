@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use DUET, please cite the manuscript below (preferred-citation) and the software."
+type: software
+title: "DUET"
+abstract: >-
+  DUET (Decoding Unified with Experimental Trade-offs) designs codebooks for
+  barcode-based assays such as optical pooled screens and MERFISH by trading
+  decoding accuracy against an experiment-specific objective, and returns the
+  Pareto front of codebooks.
+version: 0.2.0
+license: MIT
+repository-code: "https://github.com/AltschulerWu-Lab/DUET"
+keywords:
+  - codebook design
+  - barcodes
+  - error correction
+  - multi-objective optimization
+  - optical pooled screens
+  - MERFISH
+authors:
+  - given-names: Lee
+    family-names: Rao
+    email: lee.rao@ucsf.edu
+  - given-names: Lani F.
+    family-names: Wu
+  - given-names: Steven J.
+    family-names: Altschuler
+preferred-citation:
+  type: unpublished
+  title: "DUET: Multi-objective optimization of codebooks for barcode-based assays"
+  authors:
+    - given-names: Lee
+      family-names: Rao
+    - given-names: Lani F.
+      family-names: Wu
+    - given-names: Steven J.
+      family-names: Altschuler

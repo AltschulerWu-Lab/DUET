@@ -1,0 +1,97 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/08-05-2026/Weissman_cross_eval/position_varying/position_varying.yaml
+# for experiments/ops_crispri_cross_eval (Supp Fig S3b). Changes, nothing else:
+#   * duet.optimizer.lambda rewritten as 1 - x (lambda now weights decoding
+#     accuracy; docs/adr/0001-lambda-weights-decoding-accuracy.md).
+#   * outdir, cache_dir, scratch_dir moved under this repo's results/.
+#   * noise-matrix paths point at the byte-identical copies in noise_matrices/.
+#   * evaluator.seed: 42 and duet.pep.seed: 43 added (both unset as run). The
+#     ops_uniform regression fixture (scripts/benchmark/regression/ops_uniform/
+#     ops_uniform.yaml) uses 42 for both; the PEP gets its own seed here so its
+#     Monte Carlo streams are independent of the ground truth's (both spawn one
+#     child stream per index from their root seed). The top-level seed only
+#     sets the trial seeds; without these two, the ground truth and the PEP
+#     draw fresh OS entropy and re-runs do not repeat.
+# All relative paths are relative to this folder: the loaders take them
+# verbatim (relative to the working directory) and run.sh cd's here first.
+# The archived header follows unchanged; the files it refers to (README.md,
+# sibling configs) are those of the archive bundle scripts/benchmark/archive/08-05-2026/Weissman_cross_eval/
+# =============================================================================
+
+# =============================================================================
+# Position-varying noise channel — NIS-seq HeLa learned error rates (50th
+# percentile, subsample=50000). Per-position scalar epsilon, identical across
+# symbols. The source NIS-seq array spans 14 rounds; noise_matrices/ carries the
+# first 10 to match the Weissman seq_rounds.
+#
+# 2026-08-05 successor to
+# archive/05-10-2026/Weissman_cross_eval_with_nisseq_errors/positional. Changes:
+# unique_minimum decoding (was pairwise_posterior_threshold @ 0.95), DUET PEP
+# num_samples 5000 (was 2000), and the 2026-06-06 / 2026-06-17 / 2026-06-21
+# schema migrations. See ../README.md.
+# =============================================================================
+
+outdir: ../../results/experiments/ops_crispri_cross_eval/position_varying
+cache_dir: ../../results/cache/ops_crispri_cross_eval
+scratch_dir: ../../results/scratch/ops_crispri_cross_eval
+trials: 5
+seed: 42
+device: "gpu:all"
+mem_budget_gb: 64.0
+
+candidate_pool:
+  source: WeissmanCRISPRi
+  seq_rounds: 10
+  quota: 2
+  num_controls: 200
+  num_groups: 1000
+  min_rank: 10
+
+evaluator:
+  noise_channel:
+    type: position_varying
+    epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+  decoding_metric:
+    type: position_varying_nll
+    epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 2000
+  num_cpus: 30
+  seed: 42
+
+duet:
+  use_mmap: true
+  force_rebuild: false
+  initialization:
+    type: random
+  optimizer:
+    # As run (old convention): [0.0, 0.5, 0.75, 0.8, 0.825, 0.85, 0.875, 0.9,
+    # 0.91, ..., 0.99, 1.0]. Now 1 - x, sorted ascending, exact decimals.
+    lambda: [0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.125, 0.15, 0.175, 0.2, 0.25, 0.5, 1.0]
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 3000
+    avoid_duplicates: true
+    duplicate_penalty: 100.0
+    num_cpus: 18
+  pep:
+    noise_channel:
+      type: position_varying
+      epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+    decoding_metric:
+      type: position_varying_nll
+      epsilon_path: noise_matrices/nisseq_positional_10rounds.npy
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 5000
+    num_cpus: 30
+    seed: 43
+
+sivanandan:
+  edit_distances: [1, 2, 3]
+  num_cpus: 8
+
+feldman:
+  conda_env: ops
+  edit_distances: [1, 2]

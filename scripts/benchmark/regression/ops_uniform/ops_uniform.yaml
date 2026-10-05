@@ -1,0 +1,72 @@
+# ops_uniform regression fixture: OPS benchmark, symmetric noise (eps=0.1),
+# unique_minimum decoding, 3 trials, both baselines.
+# Relative paths resolve against this file's directory (the driver sets cwd here;
+# OPS resolves outdir/cache/scratch relative to cwd). Outputs, the PEP cache and
+# the scratch files all go under the repository's results/ folder.
+# seed is also set under evaluator: and duet.pep:, as in merfish_asymmetric.
+# OPS uses the top-level seed only for trial seeds; without the other two, the
+# final evaluation and the PEP (rebuilt every run under force_rebuild) draw
+# fresh OS entropy and the fixture cannot reproduce under --check.
+outdir: ../../../../results/benchmark/regression/ops_uniform
+cache_dir: ../../../../results/cache/regression
+trials: 3
+seed: 42
+device: "gpu:all"
+
+candidate_pool:
+  source: WeissmanCRISPRi
+  seq_rounds: 10
+  quota: 2
+  num_controls: 200
+  num_groups: 1000
+  min_rank: 10
+
+evaluator:
+  noise_channel:
+    type: symmetric
+    epsilon: 0.1
+  decoding_metric:
+    type: hamming
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 2000
+  num_cpus: 20
+  seed: 42
+  scratch_dir: ../../../../results/scratch/regression
+  mem_budget_gb: 64.0
+
+duet:
+  use_mmap: true
+  device: "gpu:all"
+  force_rebuild: true
+  sym_mem_budget_gb: 64.0
+  pep:
+    noise_channel:
+      type: symmetric
+      epsilon: 0.1
+    decoding_metric:
+      type: hamming
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 2000
+    num_cpus: 20
+    seed: 42
+    scratch_dir: ../../../../results/scratch/regression
+  initialization:
+    type: random
+  optimizer:
+    lambda: [0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.125, 0.15, 0.175, 0.2, 0.25, 0.5, 1.0]
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 3000
+    avoid_duplicates: true
+    duplicate_penalty: 100.0
+    num_cpus: 10
+
+sivanandan:
+  edit_distances: [1, 2, 3]
+  num_cpus: 10
+
+feldman:
+  conda_env: ops
+  edit_distances: [1, 2]

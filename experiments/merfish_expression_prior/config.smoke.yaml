@@ -1,0 +1,57 @@
+# Smoke config (VARIANT=smoke), chained on the merfish_2000_genes smoke run:
+# 2 panels; DUET template = that run's smoke config (small pool, its smoke PEP
+# cache); cell-type n_trials 2 on two classes; exact anchor. Outputs and scratch
+# under results/smoke/. config.yaml has the full description.
+
+outdir: ../../results/smoke/merfish_expression_prior
+scratch_dir: ../../results/smoke/scratch/merfish_expression_prior
+
+# --- step 1, build_per_class_expression.py (scanpy_env: h5py, no duet) ---
+# Allen Brain Cell Atlas WMB-10X precomputed stats (1.38 GB) and gene table.
+# Not in git: download both into data/raw/WMB-10X/ with the commands in
+# docs/reproducing_the_paper.md (../INPUTS.md lists their sha256).
+abc_stats_h5: ../../data/raw/WMB-10X/wmb_precomputed_stats.h5
+abc_gene_csv: ../../data/raw/WMB-10X/wmb_gene.csv
+# Whole-brain prior (the table merfish_2000_genes optimizes against). The panel
+# gene sets are drawn from it too. Not in git (atlas values): build it with
+# `python scripts/wmb10x/build_whole_brain_cpm.py` in the scanpy environment.
+prior_csv: ../../examples/data/processed/WMB-10X/whole_brain_per_gene_cpm.csv
+# Gene set for the build step's capture sanity check (only its Gene column is read).
+panel_csv: ../merfish_2000_genes/panels/k2000_bostrom_hw5_panel.csv
+
+# --- step 2, make_panels.py ---
+bostrom_codebook: ../../examples/data/bostrom/32Bit_HW5_HD4_finalsize6579Binary_reordered557.csv
+panel_size: 2000
+# The MHD4 permutation is a function of (panel_size, seed) only, so it anchors the
+# same codeword at every panel position whatever the genes are. That keeps the
+# candidate pool, and so the PEP fingerprint, identical across panels. Changing
+# it forces a ~4 h PEP rebuild (and ~38 GB of cache) per panel.
+mhd4_shuffle_seed: 42
+# Each panel is a uniform draw (without replacement) over the non-zero,
+# non-ERCC genes of prior_csv, one seed per panel.
+panels:
+  - {id: p01, gene_seed: 0}
+  - {id: p02, gene_seed: 1}
+
+# --- step 3, one run_merfish.py per panel ---
+# Each panel config is this template with only these changes: absolute paths for
+# outdir, cache_dir, expression, genes, initialization and baselines; the panel's
+# own scratch dir; duet.lambda = [lambda]; evaluator/duet device = one GPU per
+# panel (round robin over gpus); evaluator.num_cpus and duet.num_cpus. Every key
+# in the PEP fingerprint (candidates, seed, duet.pep incl. the verbatim
+# channel_matrix_path strings) is kept, so every panel reuses the template run's
+# PEP cache, and run.sh runs from this folder, at the same depth as
+# merfish_2000_genes, for those relative strings to resolve.
+duet_template: ../merfish_2000_genes/config.smoke.yaml
+lambda: 0.80
+gpus: [0, 1, 2, 3]
+evaluator_num_cpus: 8
+
+# --- step 4, evaluate_crowding_by_cell_type.py, once per panel ---
+n_trials: 2
+seed: 42           # as run
+classes: ["01 IT-ET Glut", "31 OPC-Oligo"]
+anchor_tol: 1.0e-9
+
+# --- step 5, aggregate_panels.py ---
+duet_label: "DUET (λ=0.80)"

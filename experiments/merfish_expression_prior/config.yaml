@@ -1,0 +1,89 @@
+# =============================================================================
+# Supp Fig S4b: optical-crowding robustness to a mismatched expression prior,
+# over resampled 2,000-gene panels.
+#
+# Each panel is its own 2,000-gene set with its own Bostrom and MHD4 baselines
+# and its own DUET codebook (lambda 0.80 only), and every codebook is evaluated
+# under the 34 WMB-10X major cell types at matched panel-spot density. The
+# figure shows the mean over panels and its standard error. Every panel is a
+# seeded uniform draw; none is the Fig 4c gene set.
+#
+# Until 2026-09-30 this experiment evaluated only the three Fig 4c codebooks,
+# with error bars over simulated cells (the shipped S4b). That earlier pipeline
+# is not part of this repository (its vendored codebooks came from the wrong
+# run and are not used here).
+#
+# Read by the scripts in this folder; every relative path is resolved against
+# this file's folder. Run merfish_2000_genes first.
+# =============================================================================
+
+outdir: ../../results/experiments/merfish_expression_prior
+scratch_dir: ../../results/scratch/merfish_expression_prior
+
+# --- step 1, build_per_class_expression.py (scanpy_env: h5py, no duet) ---
+# Allen Brain Cell Atlas WMB-10X precomputed stats (1.38 GB) and gene table.
+# Not in git: download both into data/raw/WMB-10X/ with the commands in
+# docs/reproducing_the_paper.md (../INPUTS.md lists their sha256).
+abc_stats_h5: ../../data/raw/WMB-10X/wmb_precomputed_stats.h5
+abc_gene_csv: ../../data/raw/WMB-10X/wmb_gene.csv
+# Whole-brain prior (the table merfish_2000_genes optimizes against). The panel
+# gene sets are drawn from it too. Not in git (atlas values): build it with
+# `python scripts/wmb10x/build_whole_brain_cpm.py` in the scanpy environment.
+prior_csv: ../../examples/data/processed/WMB-10X/whole_brain_per_gene_cpm.csv
+# Gene set for the build step's capture sanity check (only its Gene column is read).
+panel_csv: ../merfish_2000_genes/panels/k2000_bostrom_hw5_panel.csv
+
+# --- step 2, make_panels.py ---
+bostrom_codebook: ../../examples/data/bostrom/32Bit_HW5_HD4_finalsize6579Binary_reordered557.csv
+panel_size: 2000
+# The MHD4 permutation is a function of (panel_size, seed) only, so it anchors the
+# same codeword at every panel position whatever the genes are. That keeps the
+# candidate pool, and so the PEP fingerprint, identical across panels. Changing
+# it forces a ~4 h PEP rebuild (and ~38 GB of cache) per panel.
+mhd4_shuffle_seed: 42
+# Each panel is a uniform draw (without replacement) over the non-zero,
+# non-ERCC genes of prior_csv, one seed per panel (seeds 0-19).
+panels:
+  - {id: p01, gene_seed: 0}
+  - {id: p02, gene_seed: 1}
+  - {id: p03, gene_seed: 2}
+  - {id: p04, gene_seed: 3}
+  - {id: p05, gene_seed: 4}
+  - {id: p06, gene_seed: 5}
+  - {id: p07, gene_seed: 6}
+  - {id: p08, gene_seed: 7}
+  - {id: p09, gene_seed: 8}
+  - {id: p10, gene_seed: 9}
+  - {id: p11, gene_seed: 10}
+  - {id: p12, gene_seed: 11}
+  - {id: p13, gene_seed: 12}
+  - {id: p14, gene_seed: 13}
+  - {id: p15, gene_seed: 14}
+  - {id: p16, gene_seed: 15}
+  - {id: p17, gene_seed: 16}
+  - {id: p18, gene_seed: 17}
+  - {id: p19, gene_seed: 18}
+  - {id: p20, gene_seed: 19}
+
+# --- step 3, one run_merfish.py per panel ---
+# Each panel config is this template with only these changes: absolute paths for
+# outdir, cache_dir, expression, genes, initialization and baselines; the panel's
+# own scratch dir; duet.lambda = [lambda]; evaluator/duet device = one GPU per
+# panel (round robin over gpus); evaluator.num_cpus and duet.num_cpus. Every key
+# in the PEP fingerprint (candidates, seed, duet.pep incl. the verbatim
+# channel_matrix_path strings) is kept, so every panel reuses the template run's
+# PEP cache, and run.sh runs from this folder, at the same depth as
+# merfish_2000_genes, for those relative strings to resolve.
+duet_template: ../merfish_2000_genes/config.yaml
+lambda: 0.80
+gpus: [0, 1, 2, 3]
+evaluator_num_cpus: 8
+
+# --- step 4, evaluate_crowding_by_cell_type.py, once per panel ---
+n_trials: 100      # simulated cells per (codebook x cell type), as run
+seed: 42           # as run
+classes: null      # null = all 34 classes; a list restricts the evaluation
+anchor_tol: 0.02   # each panel's whole-brain rows vs its own run's metrics.csv
+
+# --- step 5, aggregate_panels.py ---
+duet_label: "DUET (λ=0.80)"

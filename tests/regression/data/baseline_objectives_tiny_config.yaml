@@ -1,0 +1,22 @@
+# Minimal regression config for the baseline-objectives refactor.
+# Designed for sub-second CI runtime: 6 codebooks × 1 noise × 2 trials.
+# Used by tests/regression/test_baseline_objectives_refactor_parity.py.
+
+outdir: /tmp/baseline_objectives_regression_run
+seed: 42
+trials: 2
+
+pool:
+  num_groups: 1
+  candidates_per_group: 4
+  seq_length: 6
+  alphabet_size: 2
+  quota: 2
+
+evaluator:
+  num_samples: 100
+  num_cpus: 2
+
+noise_channels:
+  - symmetric
+error_rate: 0.2

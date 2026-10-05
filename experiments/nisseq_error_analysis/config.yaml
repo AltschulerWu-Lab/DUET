@@ -1,0 +1,65 @@
+# =============================================================================
+# Supp Fig S3a: NIS-seq HeLa IL-1b error analysis (run.sh reads this file; the
+# notebook itself takes its parameters from NISSEQ_* environment variables that
+# run.sh sets from here).
+#
+# 02_error_analysis.ipynb in this folder is a parameterized copy of the original
+# analysis notebook: cell 1's absolute paths and switches became environment
+# variables; every other cell is verbatim. Its helper module error_utils.py sits
+# beside it in this folder.
+#
+# Changes from the as-run notebook runs (2026-03-31 and 2026-04-23/26):
+#   - Paths relative to this folder (as run: absolute lab paths). The data
+#     folder is the gitignored data/raw/NISseq_HeLa_IL1b, a folder or a link to
+#     one (see README.md, Inputs).
+#   - Outputs under results/experiments/nisseq_error_analysis/subsample<N>/
+#     (as run: figures to results/NIS-seq/error_analysis/, matrices written by
+#     hand-flipping SAVE_NOISE_MODEL into scripts/benchmark/noise_model_matrices/).
+#   - One run per subsample size, looped by run.sh (as run: SUBSAMPLE_N edited by
+#     hand between runs; the 100,000 value was never committed).
+#   - Each regenerated matrix set is compared byte for byte with the matrices
+#     that the figures used (provenance below), when this copy includes them.
+# Kept as run: all compute cells, SELECTED_PERCENTILE = 50 (per-screen
+# threshold), the 7-percentile sweep, NUM_ROUNDS = 14, match chunk_size 10000,
+# apply_style(), figure names and sizes.
+# =============================================================================
+
+# Holds NIS-seq_HeLa_IL1b/ (the 8 spot-level base-call files) and Brunello_sgRNAs/.
+# Override with NISSEQ_DATA_DIR / NISSEQ_LIBRARY_PATH (relative to your cwd).
+data_dir: ../../data/raw/NISseq_HeLa_IL1b
+library_path: ../../data/raw/NISseq_HeLa_IL1b/Brunello_sgRNAs/Brunello_sgRNAs.txt
+
+# One subfolder per subsample size: <outdir>/subsample<N>/{figures,noise_matrices}/,
+# the executed notebook beside them, logs in <outdir>/logs/.
+outdir: ../../results/experiments/nisseq_error_analysis
+
+# Reads per file (the first N rows of each of the 8 files). Override with
+# SUBSAMPLE_NS="5000" etc. Which figure uses which:
+#   5000   -> Supp S3a panel (error_lines_4_pctl50_subsample5000.svg)
+#   50000  -> the S3b matrices (channels/nisseq/*_pctl50_subsample50000.npy)
+#   100000 -> the Fig 3d-f / S3c matrices (channels/archive/nisseq_hela_*_subsample.npy)
+subsample_ns: [5000, 50000, 100000]
+
+# sha256 of every input, checked by run.sh before any work (CHECK_INPUT_HASHES=0
+# skips it). Keys under data_dir, plus the library.
+input_sha256:
+  library: 5daee4c28dcb777ee19b29823dab1216d8f41a453492d6e4b75c0a82c427bb79
+  NIS-seq_HeLa_IL1b/E-9_B2_seq_combined.txt: 8e8449828fe17b0098376aba0612dd719a5f5d726f22db3058e8c9e9c39e4ee9
+  NIS-seq_HeLa_IL1b/E-9_B3_seq_combined.txt: 07cc21ee18f7cbe1741fa9cf256c4037538c69981f1c02d22ea67b00b55750e7
+  NIS-seq_HeLa_IL1b/E-9_B4_seq_combined.txt: 3825a3ed5d6ada47d3412e5d982ebf4eddd8f46b50e5e3dc5f6f53390ccdd70b
+  NIS-seq_HeLa_IL1b/E-9_B5_seq_combined.txt: 29a7cf8fa59e5048402324d64e78c49c02641da18069bab03d54054f8b31cdd5
+  NIS-seq_HeLa_IL1b/E-9C_Sequences_B2.txt: d618161f1c5848a7c6b6d871a2aa9ff05d6789fe806b592c621ac20dfad0cfef
+  NIS-seq_HeLa_IL1b/E-9C_Sequences_B3.txt: 66e0e29b688c3a10b144d2b420b01872da545fd48b3b0c170a34d63a96baf450
+  NIS-seq_HeLa_IL1b/E-9C_Sequences_B4.txt: b0c8dce56815bcefc852a7e4a17a7e8deb6e115639f65e21f5e47b0d049c508c
+  NIS-seq_HeLa_IL1b/E-9C_Sequences_B5.txt: ff0ae0aa93623fc641cf32ad7d221c91730b3860d9b3d21db27e7a19e0ab3bef
+
+# Provenance check (check_provenance.py), per subsample size: the reference files
+# the four regenerated matrices must equal byte for byte ({kind} = uniform,
+# positional, channel, positional_channel). A size not listed here is reported as
+# skipped, and so is a reference file missing from your copy: the NIS-seq
+# channel matrices are included only with the permission of the authors of
+# Fandrey et al. (2025), who shared the spot-level base calls on request.
+provenance:
+  5000: ../../scripts/benchmark/noise_model_matrices/channels/nisseq/nisseq_hela_{kind}_pctl50_subsample5000.npy
+  50000: ../../scripts/benchmark/noise_model_matrices/channels/nisseq/nisseq_hela_{kind}_pctl50_subsample50000.npy
+  100000: ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_{kind}_subsample.npy

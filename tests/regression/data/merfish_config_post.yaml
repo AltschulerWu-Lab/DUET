@@ -1,0 +1,40 @@
+# tests/regression/data/merfish_config_post.yaml
+# Post-2026-05-25-schema MERFISH config for regression tests.
+# Pure-decode path: no expression / genes / crowding (crowding-tolerant since
+# DUET defaults to no crowding objective when expression+genes absent).
+outdir: out/merfish-snapshot  # placeholder: the tests write to a pytest tmp_path
+seed: 42
+
+candidates:
+  seq_rounds: 16
+  codebook_size: 20
+  hamming_weights: [4]
+
+evaluator:
+  noise_channel:
+    type: symmetric
+    epsilon: 0.1
+  decoding_metric:
+    type: hamming
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 1000
+  num_cpus: 2
+  seed: 42
+
+duet:
+  lambda: [1.0]
+  temperature: 0.0
+  max_iter: 1000
+  max_patience: 200
+  pep:
+    noise_channel:
+      type: symmetric
+      epsilon: 0.1
+    decoding_metric:
+      type: hamming
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 1000
+    num_cpus: 2
+    seed: 42

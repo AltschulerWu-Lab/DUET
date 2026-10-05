@@ -1,0 +1,135 @@
+# =============================================================================
+# MIGRATED COPY of scripts/benchmark/archive/04-02-2026/nisseq_positional/nisseq_positional.yaml
+# for experiments/ops_crispick_genome_wide (Supp Fig S3c phase 1, legend
+# "DUET (Position-varying error)"). Changes, nothing else:
+#   * Schema rename (2026-06-06, cb7036e..8cd2355): evaluator.noise_model ->
+#     noise_channel, dissimilarity_function -> decoding_metric; types
+#     positional (noise) / positional_nll (metric) -> position_varying /
+#     position_varying_nll. Same classes, renamed (PositionalEpsilon ->
+#     PositionVaryingEpsilon, PositionalNLL -> PositionVaryingNLL); same matrix key.
+#   * duet.optimizer.alpha -> lambda (f32e7a7), rewritten as 1 - x (lambda now
+#     weights decoding accuracy; docs/adr/0001-lambda-weights-decoding-accuracy.md).
+#   * duet.pep added (required since 732f9e6). As run there was no pep block and
+#     DUET's PEP reused the evaluator block (run_benchmark.py at 5e3536d:
+#     `pep_config = config.duet.pep or config.evaluator`). duet.pep repeats the
+#     evaluator's channel, metric, rule, num_samples 5000 and num_cpus 20.
+#   * Device/memory/scratch layout (732f9e6): duet.device "gpu:all",
+#     duet.sym_mem_budget_gb 64.0 and duet.eval_mem_budget_gb 64.0 (the last is
+#     now rejected) became the top-level device "gpu:all" and mem_budget_gb 64.0,
+#     which the DUET step (sym 64) and the evaluation's device inherit;
+#     evaluator.scratch_dir became the top-level scratch_dir, which evaluator
+#     and duet.pep inherit.
+#   * evaluator.mem_budget_gb: 20.0 (2026-09-25; the key's built-in default)
+#     sets the evaluation's batch budget and overrides the top-level 64.0 for
+#     that step only. Memory only: results are identical at any value. As run,
+#     64 sized per-codebook batches; since 2026-04-22 it sizes one batched
+#     matmul over all codebooks, which peaks at about 1.5-2.5x the budget plus a
+#     6.5 GB copy of the CSR row pointers (about 130-145 GB of anonymous memory
+#     at 64, about 35-55 GB at 20). See README.md, "Disk and memory".
+#   * outdir, cache_dir, scratch_dir moved under this repo's results/.
+#   * candidate_pool.csv_path added: the CRISPick table the as-run read through
+#     the factory's default path (sha256 e49d9264...). The as-run config had no
+#     csv_path. The table is not shipped (Broad Institute GPP terms); build it
+#     with scripts/data_processing/build_crispick_candidates.py.
+#   * Noise matrix: the copy in scripts/benchmark/noise_model_matrices/
+#     channels/archive/, sha256-identical to the as-run file (then at
+#     .../channels/nisseq_hela_positional_subsample.npy). The path is written
+#     once, as the YAML anchor &noise_matrix in evaluator.noise_channel; the
+#     other three uses alias it. Kept as run (the archive fit,
+#     first 100,000 reads per file); see README.md, "Noise matrices", which
+#     also says how to rebuild it.
+#   * evaluator.seed: 42 and duet.pep.seed: 43 added (both unset as run). The
+#     top-level seed only sets the trial seed (trial 1: 191664963, as run).
+#   * duet.initialization.type: random written out (the as-run default).
+#   * Feldman et al.: as run, the runner's 80,000-sequence guard skipped it
+#     (pool 305,202). With the genome-scale fix (155395f) it runs at ED 1 and 2.
+# All relative paths are relative to this folder: the loaders take them
+# verbatim (relative to the working directory) and run.sh cd's here first.
+# The archived header follows unchanged; its usage line names the archive
+# bundle's file.
+# =============================================================================
+
+# =============================================================================
+# CRISPick Positional Noise Model Genome-Wide Benchmark - NIS-seq HeLa (GPU)
+# =============================================================================
+# Positional noise model using per-position epsilon array (length 14) from
+# NIS-seq HeLa IL-1b data (subsample). Captures position-dependent error rates.
+#
+# Usage:
+#   python run_benchmark.py --config nisseq_positional.yaml -vv
+# =============================================================================
+
+outdir: ../../results/experiments/ops_crispick_genome_wide/position_varying
+cache_dir: ../../results/cache/ops_crispick_genome_wide
+scratch_dir: ../../results/scratch/ops_crispick_genome_wide
+trials: 1
+seed: 42
+device: "gpu:all"
+mem_budget_gb: 64.0
+
+candidate_pool:
+  source: CRISPick
+  csv_path: ../../data/processed/CRISPick/crispick_ensembl_aggrCFD_top20_candidates.csv
+  seq_rounds: 14
+  quota: 3              # 3 guides per gene
+  num_controls: 0
+  num_groups: all
+  min_rank: 15
+  control_quotas:
+    NO_SITE: 100
+    ONE_SITE_INTERGENIC: 900
+
+evaluator:
+  noise_channel:
+    type: position_varying
+    # Noise matrix (as run; see the header). The
+    # only place the path is written: the three *noise_matrix aliases below
+    # reuse it.
+    epsilon_path: &noise_matrix ../../scripts/benchmark/noise_model_matrices/channels/archive/nisseq_hela_positional_subsample.npy
+  decoding_metric:
+    type: position_varying_nll
+    epsilon_path: *noise_matrix
+  decoding_rule:
+    type: unique_minimum
+  num_samples: 5000
+  num_cpus: 20
+  seed: 42
+  # Evaluation batch budget (memory only; see the header). This block value
+  # wins over the top-level mem_budget_gb, which the DUET symmetrize keeps (64).
+  mem_budget_gb: 20.0
+
+duet:
+  use_mmap: true
+  force_rebuild: false
+  initialization:
+    type: random
+  optimizer:
+    # As run (old convention, key `alpha`): [0.0, 0.5, 0.75, 0.8, 0.825, 0.85,
+    # 0.875, 0.9, 0.91, ..., 0.99, 1.0]. Now 1 - x, sorted ascending, exact decimals.
+    lambda: [0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.125, 0.15, 0.175, 0.2, 0.25, 0.5, 1.0]
+    temperature: 0.0
+    max_iter: 100000
+    max_patience: 100
+    avoid_duplicates: true
+    duplicate_penalty: 100.0
+    num_cpus: 18
+  pep:
+    noise_channel:
+      type: position_varying
+      epsilon_path: *noise_matrix
+    decoding_metric:
+      type: position_varying_nll
+      epsilon_path: *noise_matrix
+    decoding_rule:
+      type: unique_minimum
+    num_samples: 5000
+    num_cpus: 20
+    seed: 43
+
+sivanandan:
+  edit_distances: [1, 2, 3]
+  num_cpus: 8
+
+feldman:
+  conda_env: ops
+  edit_distances: [1, 2]

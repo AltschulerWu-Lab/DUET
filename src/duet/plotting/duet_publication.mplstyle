@@ -1,0 +1,65 @@
+# DUET publication stylesheet. Loaded via duet.plotting.apply_style().
+# Lab font sizes: 8 pt axis labels, 9 pt titles, 7 pt ticks and legend
+# (sans-serif, chosen deliberately rather than the Nature Methods 5-7 pt rule).
+# Sizes assume panels are saved at their final slot size and NOT rescaled in
+# Inkscape. Slots tile a 180 mm page with 4 mm gaps (57.33 / 88 / 118.67 /
+# 180 mm, see FIGURE_WIDTHS); make a panel with duet.plotting.slot_figure and
+# save it with duet.plotting.save_panel, which saves at exact size despite the
+# savefig.bbox: tight below.
+
+# --- Font ---
+font.family:        sans-serif
+font.sans-serif:    Arial, Helvetica, Liberation Sans, DejaVu Sans
+# Render mathtext ($...$, e.g. subscripts like log_{10}) in the body sans font
+# instead of matplotlib's default DejaVu math fontset, so mixed labels stay in
+# Arial/Liberation Sans and composite consistently in Inkscape.
+mathtext.default:   regular
+font.size:          8
+axes.labelsize:     8
+axes.titlesize:     9
+xtick.labelsize:    7
+ytick.labelsize:    7
+legend.fontsize:    7
+figure.titlesize:   10
+
+# --- Editable text in Inkscape / Illustrator ---
+svg.fonttype:       none
+pdf.fonttype:       42
+ps.fonttype:        42
+
+# --- Lines, markers, spines ---
+lines.linewidth:    1.2
+lines.markersize:   4
+axes.linewidth:     0.6
+xtick.major.width:  0.6
+ytick.major.width:  0.6
+xtick.minor.width:  0.4
+ytick.minor.width:  0.4
+grid.linewidth:     0.4
+
+# --- Ticks (the "ticks" look) ---
+xtick.direction:    out
+ytick.direction:    out
+xtick.major.size:   3
+ytick.major.size:   3
+xtick.minor.size:   1.5
+ytick.minor.size:   1.5
+xtick.top:          False
+ytick.right:        False
+axes.spines.top:    False
+axes.spines.right:  False
+axes.grid:          False
+
+# --- Legend ---
+legend.frameon:     False
+legend.borderaxespad: 0.5
+
+# --- Colorblind-safe default cycle (Okabe-Ito, without black) ---
+axes.prop_cycle: cycler('color', ['E69F00', '56B4E9', '009E73', 'F0E442', '0072B2', 'D55E00', 'CC79A7'])
+
+# --- Save ---
+savefig.format:       svg
+savefig.bbox:         tight
+savefig.dpi:          300
+savefig.transparent:  True
+figure.dpi:           100

@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use DUET, please cite the manuscript below (preferred-citation) and the software."
+message: "If you use DUET, please cite the accompanying manuscript and this software."
 type: software
 title: "DUET"
 abstract: >-
@@ -8,6 +8,7 @@ abstract: >-
   decoding accuracy against an experiment-specific objective, and returns the
   Pareto front of codebooks.
 version: 0.2.0
+doi: 10.5281/zenodo.23201288
 license: MIT
 repository-code: "https://github.com/AltschulerWu-Lab/DUET"
 keywords:
@@ -21,17 +22,26 @@ authors:
   - given-names: Lee
     family-names: Rao
     email: lee.rao@ucsf.edu
+    affiliation: "University of California, San Francisco"
+    orcid: "https://orcid.org/0000-0001-6744-8393"
   - given-names: Lani F.
     family-names: Wu
+    affiliation: "University of California, San Francisco"
+    orcid: "https://orcid.org/0000-0002-0052-7537"
   - given-names: Steven J.
     family-names: Altschuler
+    affiliation: "University of California, San Francisco"
+    orcid: "https://orcid.org/0000-0001-9142-0796"
 preferred-citation:
   type: unpublished
   title: "DUET: Multi-objective optimization of codebooks for barcode-based assays"
   authors:
     - given-names: Lee
       family-names: Rao
+      orcid: "https://orcid.org/0000-0001-6744-8393"
     - given-names: Lani F.
       family-names: Wu
+      orcid: "https://orcid.org/0000-0002-0052-7537"
     - given-names: Steven J.
       family-names: Altschuler
+      orcid: "https://orcid.org/0000-0001-9142-0796"

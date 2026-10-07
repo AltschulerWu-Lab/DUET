@@ -230,8 +230,11 @@ If you use DUET, please cite:
 Rao, L., Wu, L. F. & Altschuler, S. J. DUET: Multi-objective optimization of codebooks for
 barcode-based assays. Submitted.
 
-The software citation is in [CITATION.cff](CITATION.cff); each release is archived on Zenodo.
-<!-- TODO(release): add the Zenodo DOI of the release -->
+The software citation is in [CITATION.cff](CITATION.cff). Each release is archived on Zenodo:
+DUET v0.2.0, the version used in the manuscript, is
+[doi:10.5281/zenodo.23201289](https://doi.org/10.5281/zenodo.23201289), and
+[doi:10.5281/zenodo.23201288](https://doi.org/10.5281/zenodo.23201288) always resolves to the
+latest release.
 
 ## License
 
